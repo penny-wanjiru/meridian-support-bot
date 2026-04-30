@@ -3,8 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
 logging.basicConfig(
@@ -74,9 +73,9 @@ async def chat_endpoint(request: ChatRequest):
         )
 
 
-if STATIC_DIR.is_dir():
-    @app.get("/")
-    async def serve_index():
-        return FileResponse(STATIC_DIR / "index.html")
-
-    app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")
+@app.get("/", include_in_schema=False)
+async def serve_index():
+    index_file = STATIC_DIR / "index.html"
+    if index_file.is_file():
+        return FileResponse(index_file)
+    return RedirectResponse(url="/index.html", status_code=307)
