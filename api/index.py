@@ -1,5 +1,3 @@
-"""FastAPI application for the Meridian Electronics chatbot."""
-
 import logging
 from pathlib import Path
 
@@ -22,7 +20,6 @@ app.add_middleware(
     allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
 )
-
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "public"
 
@@ -58,8 +55,7 @@ async def chat_endpoint(request: ChatRequest):
                 detail=f"Invalid role '{msg.role}'. Must be 'user' or 'assistant'.",
             )
 
-    # Lazy import to avoid import-time failures during Vercel build
-    from src.agent import chat  # noqa: E402
+    from src.agent import chat
 
     try:
         messages_dicts = [m.model_dump() for m in request.messages]

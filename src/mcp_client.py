@@ -1,5 +1,3 @@
-"""MCP client for connecting to the Meridian Electronics tool server."""
-
 import json
 import logging
 from contextlib import asynccontextmanager
@@ -14,11 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def _strip_titles(schema: dict) -> dict:
-    """Recursively remove 'title' fields from a JSON schema.
-
-    OpenAI's function-calling API rejects schemas that contain 'title' keys,
-    but MCP tool schemas (generated from Pydantic models) include them.
-    """
+    """Recursively remove 'title' fields that OpenAI rejects from MCP schemas."""
     cleaned: dict = {}
     for key, value in schema.items():
         if key == "title":
@@ -36,7 +30,6 @@ def _strip_titles(schema: dict) -> dict:
 
 
 def mcp_tool_to_openai_function(tool) -> dict:
-    """Convert an MCP tool definition to OpenAI function-calling format."""
     schema = tool.inputSchema if tool.inputSchema else {"type": "object", "properties": {}}
     return {
         "type": "function",
@@ -50,13 +43,6 @@ def mcp_tool_to_openai_function(tool) -> dict:
 
 @asynccontextmanager
 async def mcp_session():
-    """Open a single MCP session over Streamable HTTP.
-
-    Yields a ClientSession that is initialised and ready to use.
-
-    Raises:
-        ConnectionError: If the MCP server is unreachable.
-    """
     try:
         async with streamablehttp_client(url=MCP_SERVER_URL) as (
             read_stream,
@@ -74,7 +60,6 @@ async def mcp_session():
 
 
 async def get_openai_tools(session: ClientSession) -> list[dict]:
-    """Discover MCP tools and return them in OpenAI function format."""
     result = await session.list_tools()
     tools = [mcp_tool_to_openai_function(t) for t in result.tools]
     logger.info("Discovered %d MCP tools", len(tools))
@@ -82,11 +67,9 @@ async def get_openai_tools(session: ClientSession) -> list[dict]:
 
 
 async def execute_tool(session: ClientSession, name: str, arguments: dict[str, Any]) -> str:
-    """Call an MCP tool and return the result as a string."""
     logger.info("Calling MCP tool %s with %s", name, json.dumps(arguments))
     result = await session.call_tool(name, arguments)
 
-    # Combine all text content blocks into a single string
     parts = []
     for block in result.content:
         if hasattr(block, "text"):
