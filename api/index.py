@@ -78,9 +78,9 @@ async def chat_endpoint(request: ChatRequest):
         )
 
 
-@app.get("/")
-async def serve_index():
-    return FileResponse(STATIC_DIR / "index.html")
+if STATIC_DIR.is_dir():
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(STATIC_DIR / "index.html")
 
-
-app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")
