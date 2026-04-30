@@ -1,6 +1,11 @@
 """Configuration loaded from environment variables."""
 
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
 MCP_SERVER_URL = os.environ.get(

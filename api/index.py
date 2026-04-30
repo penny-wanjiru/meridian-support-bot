@@ -1,9 +1,12 @@
 """FastAPI application for the Meridian Electronics chatbot."""
 
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 logging.basicConfig(
@@ -19,6 +22,9 @@ app.add_middleware(
     allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+STATIC_DIR = Path(__file__).resolve().parent.parent / "public"
 
 
 class Message(BaseModel):
@@ -70,3 +76,11 @@ async def chat_endpoint(request: ChatRequest):
             status_code=502,
             detail="Sorry, something went wrong processing your request. Please try again.",
         )
+
+
+@app.get("/")
+async def serve_index():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")
